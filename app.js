@@ -27,19 +27,34 @@ const CAT_COLORS = {
   Other: { bg: 'rgba(148,163,184,0.7)', border: '#94a3b8' },
 };
 
-Chart.defaults.color = '#7d8590';
-Chart.defaults.font.family = 'Inter, sans-serif';
-
 // ─── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Initialize Supabase only after CDN script is loaded by the browser
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  try {
+    // Initialize Supabase only after CDN script is loaded by the browser
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  setDate();
-  if (apiKey) document.getElementById('apiKeyInput').value = '•'.repeat(20);
-  await loadTransactionsFromDB();
-  navigateTo('dashboard');
+    // Initialize Chart.js defaults (must run after Chart.js CDN is loaded)
+    Chart.defaults.color = '#7d8590';
+    Chart.defaults.font.family = 'Inter, sans-serif';
+
+    setDate();
+    if (apiKey) document.getElementById('apiKeyInput').value = '•'.repeat(20);
+
+    // Bind form submission explicitly to prevent native reload
+    document.getElementById('txForm').addEventListener('submit', saveTransaction);
+
+    await loadTransactionsFromDB();
+    navigateTo('dashboard');
+  } catch (err) {
+    console.error('INIT ERROR:', err);
+    document.body.insertAdjacentHTML('afterbegin',
+      `<div style="background:red;color:white;padding:20px;font-size:18px;z-index:9999;position:fixed;top:0;left:0;right:0">
+        INIT ERROR: ${err.message}
+      </div>`
+    );
+  }
 });
+
 
 async function loadTransactionsFromDB() {
   const { data, error } = await supabase
