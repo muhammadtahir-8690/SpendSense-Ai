@@ -3,8 +3,8 @@
    ========================================= */
 
 const SUPABASE_URL = 'https://xtjqsuvqtmehnxdbjvqo.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_CQL7t2wmESnwhT8Mj_3Ytg_ox4sxW9I';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0anFzdXZxdG1laG54ZGJqdnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODg4MDksImV4cCI6MjA4ODI2NDgwOX0.HZnlp5vZ0jKBbC8zdITw-uvU93SRAkCcpe4KqTCZVbA';
+let supabase;
 
 let transactions = [];
 let apiKey = localStorage.getItem('ss_apikey') || '';
@@ -32,6 +32,9 @@ Chart.defaults.font.family = 'Inter, sans-serif';
 
 // ─── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize Supabase only after CDN script is loaded by the browser
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   setDate();
   if (apiKey) document.getElementById('apiKeyInput').value = '•'.repeat(20);
   await loadTransactionsFromDB();
