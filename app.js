@@ -2,14 +2,16 @@
    SpendSense AI — app.js
    ========================================= */
 
-// ─── STATE ───────────────────────────────────────────────
-let transactions = JSON.parse(localStorage.getItem('ss_transactions') || '[]');
+const SUPABASE_URL = 'https://xtjqsuvqtmehnxdbjvqo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_CQL7t2wmESnwhT8Mj_3Ytg_ox4sxW9I';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let transactions = [];
 let apiKey = localStorage.getItem('ss_apikey') || '';
 let editingId = null;
 let deleteId = null;
 let currentPage = 1;
 const PAGE_SIZE = 8;
-
 // Chart instances
 let donutChart = null, barChart = null, lineChart = null, catBarChart = null, hbarChart = null;
 
@@ -29,11 +31,26 @@ Chart.defaults.color = '#7d8590';
 Chart.defaults.font.family = 'Inter, sans-serif';
 
 // ─── INIT ─────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setDate();
   if (apiKey) document.getElementById('apiKeyInput').value = '•'.repeat(20);
+  await loadTransactionsFromDB();
   navigateTo('dashboard');
 });
+
+async function loadTransactionsFromDB() {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .order('date', { ascending: false });
+
+  if (error) {
+    console.error('Error loading transactions:', error);
+    showToast('Failed to load data from database.');
+    return;
+  }
+  transactions = data || [];
+}
 
 function setDate() {
   const d = new Date();
@@ -58,8 +75,7 @@ function navigateTo(page) {
 
 }
 
-// ─── SAVE / LOAD ──────────────────────────────────────────
-function saveTxns() { localStorage.setItem('ss_transactions', JSON.stringify(transactions)); }
+// Removed local saveTxns -- handled by Supabase
 
 // ─── DASHBOARD ────────────────────────────────────────────
 function renderDashboard() {
@@ -363,10 +379,9 @@ function openEditModal(id) {
   openOverlay('modalOverlay');
 }
 
-function saveTransaction(e) {
+async function saveTransaction(e) {
   e.preventDefault();
-  const txn = {
-    id: editingId || uid(),
+  const txData = {
     description: document.getElementById('fDesc').value.trim(),
     amount: parseFloat(document.getElementById('fAmount').value),
     date: document.getElementById('fDate').value,
@@ -375,14 +390,23 @@ function saveTransaction(e) {
     notes: document.getElementById('fNotes').value.trim(),
   };
 
+  const btn = document.getElementById('modalSubmitBtn');
+  const ogText = btn.textContent;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
   if (editingId) {
-    const idx = transactions.findIndex(x => x.id === editingId);
-    transactions[idx] = txn;
+    const { error } = await supabase.from('transactions').update(txData).eq('id', editingId);
+    if (error) { console.error(error); showToast('Error updating'); }
   } else {
-    transactions.unshift(txn);
+    const { error } = await supabase.from('transactions').insert([txData]);
+    if (error) { console.error(error); showToast('Error saving'); }
   }
 
-  saveTxns();
+  await loadTransactionsFromDB();
+  btn.textContent = ogText;
+  btn.disabled = false;
+
   closeModal();
   renderTransactions();
   renderDashboard();
@@ -401,13 +425,18 @@ function closeDeleteModal(e) {
   closeOverlay('deleteOverlay');
   deleteId = null;
 }
-function confirmDelete() {
+async function confirmDelete() {
   if (!deleteId) return;
-  transactions = transactions.filter(t => t.id !== deleteId);
-  saveTxns();
-  closeDeleteModal();
-  renderTransactions();
-  renderDashboard();
+  const { error } = await supabase.from('transactions').delete().eq('id', deleteId);
+  if (error) {
+    console.error(error);
+    showToast('Error deleting transaction.');
+  } else {
+    await loadTransactionsFromDB();
+    closeDeleteModal();
+    renderTransactions();
+    renderDashboard();
+  }
 }
 
 // ─── OVERLAY HELPERS ──────────────────────────────────────
