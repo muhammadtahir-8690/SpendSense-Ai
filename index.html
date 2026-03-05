@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpendSense AI — Smart Expense Tracker</title>
+  <meta name="description" content="Track your expenses and get AI-powered spending ratings with SpendSense AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">✦</div>
+      <span class="logo-text">SpendSense</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+        <span class="nav-icon">⬛</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-page="transactions" onclick="navigateTo('transactions')">
+        <span class="nav-icon">⇄</span>
+        <span class="nav-label">Transactions</span>
+      </button>
+      <button class="nav-item" data-page="analytics" onclick="navigateTo('analytics')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Analytics</span>
+      </button>
+      <button class="nav-item" data-page="ai" onclick="navigateTo('ai')">
+        <span class="nav-icon">✦</span>
+        <span class="nav-label">AI Insights</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar">MT</div>
+      <div class="user-info">
+        <div class="user-name">My Account</div>
+        <div class="user-plan">Premium Plan</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate"></span>
+        <button class="btn-analyze" onclick="navigateTo('ai')">✦ Analyze with AI</button>
+        <button class="btn-add-top" onclick="openAddModal()">+ Add Transaction</button>
+      </div>
+    </header>
+
+    <!-- Dashboard Page -->
+    <section class="page active" id="page-dashboard">
+      <!-- Stat Cards -->
+      <div class="stat-cards">
+        <div class="stat-card income">
+          <div class="stat-icon">↑</div>
+          <div class="stat-body">
+            <div class="stat-label">Total Income</div>
+            <div class="stat-value" id="statIncome">₨0</div>
+            <div class="stat-sub" id="statIncomeSub">All time</div>
+          </div>
+        </div>
+        <div class="stat-card expense">
+          <div class="stat-icon">↓</div>
+          <div class="stat-body">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" id="statExpense">₨0</div>
+            <div class="stat-sub" id="statExpenseSub">All time</div>
+          </div>
+        </div>
+        <div class="stat-card savings">
+          <div class="stat-icon">◈</div>
+          <div class="stat-body">
+            <div class="stat-label">Net Savings</div>
+            <div class="stat-value" id="statSavings">₨0</div>
+            <div class="stat-sub" id="statSavingsSub">All transactions</div>
+          </div>
+        </div>
+        <div class="stat-card ai-score">
+          <div class="stat-icon">✦</div>
+          <div class="stat-body">
+            <div class="stat-label">AI Health Score</div>
+            <div class="stat-value" id="statScore">—</div>
+            <div class="stat-sub">Run AI Insights to update</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card" style="flex:1.5">
+          <div class="chart-header">
+            <h2 class="chart-title">Spending Breakdown</h2>
+            <span class="chart-label">By Category</span>
+          </div>
+          <div class="donut-wrapper">
+            <canvas id="donutChart"></canvas>
+            <div class="donut-center" id="donutCenter">
+              <div class="donut-total" id="donutTotal">₨0</div>
+              <div class="donut-sub">Total Spent</div>
+            </div>
+          </div>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+        <div class="chart-card" style="flex:1">
+          <div class="chart-header">
+            <h2 class="chart-title">Monthly Trend</h2>
+            <span class="chart-label">Income vs Expense</span>
+          </div>
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2 class="chart-title">Recent Transactions</h2>
+          <button class="btn-link" onclick="navigateTo('transactions')">View All →</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="recentTbody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="recentEmpty" style="display:none">
+          <div class="empty-icon">📋</div>
+          <p>No transactions yet. Add your first one!</p>
+          <button class="btn-primary" onclick="openAddModal()">+ Add Transaction</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions Page -->
+    <section class="page" id="page-transactions">
+      <div class="card">
+        <div class="card-header">
+          <div class="filter-row">
+            <input type="text" class="search-input" id="txSearch" placeholder="🔍 Search transactions..."
+              oninput="renderTransactions()" />
+            <select class="filter-select" id="txCatFilter" onchange="renderTransactions()">
+              <option value="">All Categories</option>
+              <option>Food</option>
+              <option>Rent</option>
+              <option>Salary</option>
+              <option>Investment</option>
+              <option>Transport</option>
+              <option>Entertainment</option>
+              <option>Healthcare</option>
+              <option>Other</option>
+            </select>
+            <select class="filter-select" id="txTypeFilter" onchange="renderTransactions()">
+              <option value="">All Types</option>
+              <option>Income</option>
+              <option>Expense</option>
+              <option>Investment</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="openAddModal()">+ Add Transaction</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="txTbody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="txEmpty" style="display:none">
+          <div class="empty-icon">💸</div>
+          <p>No transactions found. Add one to get started!</p>
+          <button class="btn-primary" onclick="openAddModal()">+ Add Transaction</button>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </section>
+
+    <!-- Analytics Page -->
+    <section class="page" id="page-analytics">
+      <div class="analytics-grid">
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <h2 class="chart-title">Income vs Expenses — Full History</h2>
+          </div>
+          <canvas id="lineChart" style="max-height:300px"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Spending by Category</h2>
+          </div>
+          <canvas id="catBarChart" style="max-height:280px"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">Top Expense Categories</h2>
+          </div>
+          <canvas id="hbarChart" style="max-height:280px"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI Insights Page -->
+    <section class="page" id="page-ai">
+      <div class="ai-page">
+        <!-- CTA Button -->
+        <div class="analyze-cta">
+          <button class="btn-analyze-big" id="analyzeBtn" onclick="runAIAnalysis()">
+            <span class="analyze-icon">✦</span>
+            <span>Analyze My Spending</span>
+          </button>
+          <p class="analyze-sub">Powered by OpenRouter AI</p>
+        </div>
+
+        <!-- AI Results (hidden until analysis runs) -->
+        <div id="aiResults" style="display:none">
+          <!-- Overall Score -->
+          <div class="card score-card">
+            <div class="score-circle-wrap">
+              <svg class="score-ring" viewBox="0 0 120 120">
+                <circle class="ring-bg" cx="60" cy="60" r="52" />
+                <circle class="ring-fill" cx="60" cy="60" r="52" id="scoreRing" />
+              </svg>
+              <div class="score-inner">
+                <div class="score-num" id="scoreNum">—</div>
+                <div class="score-out">/ 10</div>
+              </div>
+            </div>
+            <div class="score-details">
+              <h2 class="score-title" id="scoreTitle">Overall Spending Score</h2>
+              <span class="score-badge" id="scoreBadge">—</span>
+              <p class="score-summary" id="scoreSummary"></p>
+            </div>
+          </div>
+
+          <!-- Category Ratings -->
+          <div class="section-header">
+            <h2 class="section-title">Category Ratings</h2>
+          </div>
+          <div class="category-ratings" id="categoryRatings"></div>
+
+          <!-- Investment Rating -->
+          <div class="card invest-card" id="investCard">
+            <div class="invest-icon">📈</div>
+            <div class="invest-body">
+              <h3 class="invest-title">Investment Rating</h3>
+              <p class="invest-text" id="investText"></p>
+            </div>
+            <span class="invest-badge" id="investBadge"></span>
+          </div>
+
+          <!-- Tips -->
+          <div class="section-header">
+            <h2 class="section-title">💡 AI Recommendations</h2>
+          </div>
+          <div class="tips-grid" id="tipsGrid"></div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="aiLoading" style="display:none" class="loading-wrap">
+          <div class="spinner"></div>
+          <p>Analyzing your financial data…</p>
+        </div>
+
+        <!-- Error state -->
+        <div id="aiError" style="display:none" class="error-wrap">
+          <div class="error-icon">⚠️</div>
+          <p id="aiErrorMsg"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Transaction</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <form id="txForm" onsubmit="saveTransaction(event)">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Description</label>
+            <input type="text" id="fDesc" class="form-input" placeholder="e.g. Grocery shopping" required />
+          </div>
+          <div class="form-group">
+            <label>Amount (₨)</label>
+            <input type="number" id="fAmount" class="form-input" placeholder="0.00" min="0.01" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="fDate" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="fCat" class="form-input" required>
+              <option value="">Select category</option>
+              <option>Food</option>
+              <option>Rent</option>
+              <option>Salary</option>
+              <option>Investment</option>
+              <option>Transport</option>
+              <option>Entertainment</option>
+              <option>Healthcare</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="fType" class="form-input" required>
+              <option value="">Select type</option>
+              <option>Income</option>
+              <option>Expense</option>
+              <option>Investment</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Notes (optional)</label>
+            <textarea id="fNotes" class="form-input" rows="2" placeholder="Any additional notes…"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="modalSubmitBtn">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay" id="deleteOverlay" onclick="closeDeleteModal(event)">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Delete Transaction</h2>
+        <button class="modal-close" onclick="closeDeleteModal()">×</button>
+      </div>
+      <p class="delete-msg">Are you sure you want to delete this transaction? This action cannot be undone.</p>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
