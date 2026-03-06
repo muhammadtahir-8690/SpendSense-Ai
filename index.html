@@ -16,6 +16,19 @@
 </head>
 
 <body>
+  <!-- Login Overlay -->
+  <div class="login-overlay open" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-logo">✦</div>
+      <h2 class="login-title">Welcome to SpendSense</h2>
+      <p class="login-sub">Enter a Unique ID or Username to access your personal dashboard.</p>
+      <div class="login-form">
+        <input type="text" id="loginUserId" class="form-input" placeholder="e.g. johndoe123" required />
+        <button class="btn-primary w-full" onclick="loginUser()">Get Started</button>
+      </div>
+      <p class="login-note">Note: This ID is used to sync your data across devices.</p>
+    </div>
+  </div>
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
@@ -41,10 +54,10 @@
       </button>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-avatar">MT</div>
+      <div class="user-avatar" id="userAvatar">??</div>
       <div class="user-info">
-        <div class="user-name">My Account</div>
-        <div class="user-plan">Premium Plan</div>
+        <div class="user-name" id="displayUserId">Guest</div>
+        <button class="btn-logout" onclick="logoutUser()">Logout / Switch</button>
       </div>
     </div>
   </aside>

@@ -8,6 +8,7 @@ let sb; // Renamed from supabase to avoid conflict
 
 let transactions = [];
 let apiKey = localStorage.getItem('ss_apikey') || '';
+let currentUserId = localStorage.getItem('ss_userid') || '';
 let editingId = null;
 let deleteId = null;
 let currentPage = 1;
@@ -40,6 +41,14 @@ async function initApp() {
 
     sb = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('app.js: Supabase client initialized');
+
+    // Authentication Check
+    if (!currentUserId) {
+      openOverlay('loginOverlay');
+      return; // Wait for login
+    }
+    closeOverlay('loginOverlay');
+    updateUserUI();
 
     // Initialize Chart.js defaults
     if (typeof Chart !== 'undefined') {
@@ -81,9 +90,11 @@ if (document.readyState === 'loading') {
 
 
 async function loadTransactionsFromDB() {
+  if (!currentUserId) return;
   const { data, error } = await sb
     .from('transactions')
     .select('*')
+    .eq('user_id', currentUserId)
     .order('date', { ascending: false });
 
   if (error) {
@@ -424,6 +435,7 @@ function openEditModal(id) {
 async function saveTransaction(e) {
   e.preventDefault();
   const txData = {
+    user_id: currentUserId, // Data Isolation
     description: document.getElementById('fDesc').value.trim(),
     amount: parseFloat(document.getElementById('fAmount').value),
     date: document.getElementById('fDate').value,
@@ -471,7 +483,7 @@ function closeDeleteModal(e) {
 }
 async function confirmDelete() {
   if (!deleteId) return;
-  const { error } = await sb.from('transactions').delete().eq('id', deleteId);
+  const { error } = await sb.from('transactions').delete().eq('id', deleteId).eq('user_id', currentUserId);
   if (error) {
     console.error(error);
     showToast('Error deleting transaction.');
@@ -497,8 +509,38 @@ function saveApiKey() {
   showToast('API key saved!');
 }
 
+// ─── AUTH ─────────────────────────────────────────────────
+function loginUser() {
+  const input = document.getElementById('loginUserId');
+  const val = input.value.trim().toLowerCase();
+  if (!val) {
+    showToast('Please enter a Unique ID');
+    return;
+  }
+
+  currentUserId = val;
+  localStorage.setItem('ss_userid', currentUserId);
+  input.value = '';
+
+  initApp(); // Restart init flow
+}
+
+function logoutUser() {
+  localStorage.removeItem('ss_userid');
+  currentUserId = '';
+  location.reload(); // Hard reset is safest for data isolation
+}
+
+function updateUserUI() {
+  const display = document.getElementById('displayUserId');
+  const avatar = document.getElementById('userAvatar');
+  if (display) display.textContent = currentUserId;
+  if (avatar) avatar.textContent = currentUserId.slice(0, 2).toUpperCase();
+}
+
 function loadApiKeyDisplay() {
-  if (apiKey) document.getElementById('apiKeyInput').value = '•'.repeat(20);
+  const input = document.getElementById('apiKeyInput');
+  if (input && apiKey) input.value = '•'.repeat(20);
 }
 
 // ─── AI ANALYSIS ──────────────────────────────────────────
@@ -729,3 +771,5 @@ window.saveApiKey = saveApiKey;
 window.runAIAnalysis = runAIAnalysis;
 window.goPage = goPage;
 window.showToast = showToast;
+window.loginUser = loginUser;
+window.logoutUser = logoutUser;

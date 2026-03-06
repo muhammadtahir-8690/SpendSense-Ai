@@ -1329,3 +1329,107 @@ textarea.form-input {
 .error-wrap {
   color: var(--red);
 }
+
+/* ================================
+   LOGIN & AUTH
+   ================================ */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 11, 14, 0.98);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.login-card {
+  background: #1c1f26;
+  border: 1px solid #30363d;
+  border-radius: 24px;
+  padding: 3.5rem 2.5rem;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.login-logo {
+  font-size: 3.5rem;
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
+}
+
+.login-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  color: #fff;
+}
+
+.login-sub {
+  color: #7d8590;
+  margin-bottom: 2.5rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.login-note {
+  font-size: 0.8rem;
+  color: #484f58;
+  font-style: italic;
+}
+
+.btn-logout {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.btn-logout:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--purple) !important;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.w-full {
+  width: 100%;
+}
