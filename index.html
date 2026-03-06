@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1/dist/umd/supabase.js"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -232,6 +232,22 @@
     <!-- AI Insights Page -->
     <section class="page" id="page-ai">
       <div class="ai-page">
+        <!-- Settings Sidebar or Inline -->
+        <div class="card mb-4" style="max-width: 600px; margin: 0 auto 2rem;">
+          <div class="card-header">
+            <h2 class="chart-title">AI Settings</h2>
+          </div>
+          <div style="padding: 1.5rem;">
+            <p style="color: #7d8590; margin-bottom: 1rem; font-size: 0.9rem;">
+              Enter your OpenRouter API key to enable AI analysis.
+            </p>
+            <div style="display: flex; gap: 0.75rem;">
+              <input type="password" id="apiKeyInput" class="form-input" placeholder="sk-or-..." style="flex: 1;" />
+              <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
+            </div>
+          </div>
+        </div>
+
         <!-- CTA Button -->
         <div class="analyze-cta">
           <button class="btn-analyze-big" id="analyzeBtn" onclick="runAIAnalysis()">
@@ -372,7 +388,7 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=03062024"></script>
 </body>
 
 </html>

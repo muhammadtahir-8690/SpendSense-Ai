@@ -4,7 +4,7 @@
 
 const SUPABASE_URL = 'https://xtjqsuvqtmehnxdbjvqo.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0anFzdXZxdG1laG54ZGJqdnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODg4MDksImV4cCI6MjA4ODI2NDgwOX0.HZnlp5vZ0jKBbC8zdITw-uvU93SRAkCcpe4KqTCZVbA';
-let supabase;
+let sb; // Renamed from supabase to avoid conflict
 
 let transactions = [];
 let apiKey = localStorage.getItem('ss_apikey') || '';
@@ -28,36 +28,60 @@ const CAT_COLORS = {
 };
 
 // ─── INIT ─────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
+async function initApp() {
+  console.log('app.js: initApp starting...');
   try {
-    // Initialize Supabase only after CDN script is loaded by the browser
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Initialize Supabase
+    const supabaseClient = window.supabase;
+    if (!supabaseClient) {
+      console.error('app.js: Supabase client (window.supabase) not found!');
+      throw new Error('Supabase client not found. CDN might have failed to load.');
+    }
 
-    // Initialize Chart.js defaults (must run after Chart.js CDN is loaded)
-    Chart.defaults.color = '#7d8590';
-    Chart.defaults.font.family = 'Inter, sans-serif';
+    sb = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('app.js: Supabase client initialized');
+
+    // Initialize Chart.js defaults
+    if (typeof Chart !== 'undefined') {
+      Chart.defaults.color = '#7d8590';
+      Chart.defaults.font.family = 'Inter, sans-serif';
+      console.log('app.js: Chart.js defaults set');
+    }
 
     setDate();
-    if (apiKey) document.getElementById('apiKeyInput').value = '•'.repeat(20);
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    if (apiKeyInput && apiKey) apiKeyInput.value = '•'.repeat(20);
 
-    // Bind form submission explicitly to prevent native reload
-    document.getElementById('txForm').addEventListener('submit', saveTransaction);
+    // Bind form submission
+    const txForm = document.getElementById('txForm');
+    if (txForm) {
+      txForm.addEventListener('submit', saveTransaction);
+      console.log('app.js: txForm listener bound');
+    }
 
     await loadTransactionsFromDB();
+    console.log('app.js: Transactions loaded from DB');
     navigateTo('dashboard');
+    console.log('app.js: Initial navigation done');
   } catch (err) {
     console.error('INIT ERROR:', err);
     document.body.insertAdjacentHTML('afterbegin',
       `<div style="background:red;color:white;padding:20px;font-size:18px;z-index:9999;position:fixed;top:0;left:0;right:0">
-        INIT ERROR: ${err.message}
+        INIT ERROR: ${err.message}. Please check your internet connection or Supabase configuration.
       </div>`
     );
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 
 async function loadTransactionsFromDB() {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('transactions')
     .select('*')
     .order('date', { ascending: false });
@@ -414,10 +438,12 @@ async function saveTransaction(e) {
   btn.disabled = true;
 
   if (editingId) {
-    const { error } = await supabase.from('transactions').update(txData).eq('id', editingId);
+    const { error } = await sb.from('transactions').update(txData).eq('id', editingId);
     if (error) { console.error(error); showToast('Error updating'); }
   } else {
-    const { error } = await supabase.from('transactions').insert([txData]);
+    // Generate a unique ID for the new transaction
+    txData.id = uid();
+    const { error } = await sb.from('transactions').insert([txData]);
     if (error) { console.error(error); showToast('Error saving'); }
   }
 
@@ -431,7 +457,7 @@ async function saveTransaction(e) {
 }
 
 function closeModal(e) {
-  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  if (e && e.target !== document.getElementById('modalOverlay') && !e.target.closest('.modal-close')) return;
   closeOverlay('modalOverlay');
   editingId = null;
 }
@@ -445,7 +471,7 @@ function closeDeleteModal(e) {
 }
 async function confirmDelete() {
   if (!deleteId) return;
-  const { error } = await supabase.from('transactions').delete().eq('id', deleteId);
+  const { error } = await sb.from('transactions').delete().eq('id', deleteId);
   if (error) {
     console.error(error);
     showToast('Error deleting transaction.');
@@ -689,3 +715,17 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
 }
+
+// Global scope attachments
+window.navigateTo = navigateTo;
+window.openAddModal = openAddModal;
+window.openEditModal = openEditModal;
+window.saveTransaction = saveTransaction;
+window.closeModal = closeModal;
+window.openDeleteModal = openDeleteModal;
+window.closeDeleteModal = closeDeleteModal;
+window.confirmDelete = confirmDelete;
+window.saveApiKey = saveApiKey;
+window.runAIAnalysis = runAIAnalysis;
+window.goPage = goPage;
+window.showToast = showToast;
