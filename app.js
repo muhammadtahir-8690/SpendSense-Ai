@@ -7,7 +7,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let sb; // Renamed from supabase to avoid conflict
 
 let transactions = [];
-let apiKey = localStorage.getItem('ss_apikey') || '';
+let apiKey = localStorage.getItem('ss_apikey') || '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';
 let currentUserId = localStorage.getItem('ss_userid') || '';
 let editingId = null;
 let deleteId = null;
